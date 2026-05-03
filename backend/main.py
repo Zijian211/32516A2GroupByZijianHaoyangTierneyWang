@@ -4,11 +4,14 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from dotenv import load_dotenv
 from pydantic import BaseModel, Field, field_validator
 from typing import List, Optional
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 import os
 import re
 from bson import ObjectId # --- Added To Handle MongoDB's Native IDs ---
 from bson.errors import InvalidId # --- To Catch Invalid ObjectId Formats ---
+
+from passlib.context import CryptContext
+from jose import JWTError, jwt
 
 # --- Pydantic Model For CartItem ---
 # --- 1. Product Model (Digital Goods: Phones, Watches, Laptops) ---
@@ -101,6 +104,10 @@ class Order(BaseModel):
 # --- Load The Secret URL From The .env File ---
 load_dotenv()
 MONGODB_URL = os.getenv("MONGODB_URL")
+JWT_SECRET = os.getenv("JWT_SECRET")
+JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 app = FastAPI()
 
@@ -140,6 +147,7 @@ async def signup(user: User):
         raise HTTPException(status_code=400, detail="Username already taken")
     
     new_user = user.dict()
+    new_user["password"] = pwd_context.hash(user.password) 
     await user_collection.insert_one(new_user)
     return {"message": f"User {user.username} created successfully!"}
 
@@ -147,10 +155,18 @@ async def signup(user: User):
 @app.post("/auth/login", tags=["Create (POST)"])
 async def login(credentials: UserLogin):
     user_collection = app.database.users
-    user = await user_collection.find_one({"username": credentials.username, "password": credentials.password})
-    if not user:
+    user = await user_collection.find_one({"username": credentials.username})
+    
+    if not user or not pwd_context.verify(credentials.password, user["password"]):
         raise HTTPException(status_code=401, detail="Invalid username or password")
-    return {"message": "Login successful", "user_id": str(user["_id"])}
+    
+    expire = datetime.now(timezone.utc) + timedelta(hours=24)
+    token = jwt.encode(
+        {"sub": str(user["_id"]), "exp": expire},
+        JWT_SECRET,
+        algorithm=JWT_ALGORITHM
+    )
+    return {"message": "Login successful", "access_token": token, "token_type": "bearer"}
 
 # --- Add To Cart Endpoint With Validation ---
 @app.post("/cart", status_code=status.HTTP_201_CREATED, tags=["Create (POST)"])
