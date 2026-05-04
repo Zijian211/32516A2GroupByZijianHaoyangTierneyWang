@@ -2,6 +2,7 @@ from fastapi import FastAPI, status, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 from dotenv import load_dotenv
+from pathlib import Path
 from pydantic import BaseModel, Field, field_validator
 from typing import List, Optional
 from datetime import datetime, timezone
@@ -98,9 +99,13 @@ class Order(BaseModel):
     status: str = "Completed" # --- Instantly Completed For This Order Without Transaction ---
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
-# --- Load The Secret URL From The .env File ---
-load_dotenv()
+# --- Load Environment Variables From backend/.env ---
+BASE_DIR = Path(__file__).resolve().parent
+env_path = BASE_DIR / ".env"
+load_dotenv(dotenv_path=env_path)
+
 MONGODB_URL = os.getenv("MONGODB_URL")
+MONGODB_DB_NAME = os.getenv("MONGODB_DB_NAME", "finalecommerce_db")
 
 app = FastAPI()
 
@@ -120,7 +125,7 @@ app.add_middleware(
 async def startup_db_client():
     app.mongodb_client = AsyncIOMotorClient(MONGODB_URL)
     app.database = app.mongodb_client.ecommerce_db
-    print("Connected to the MongoDB database!")
+    print(f"Connected to MongoDB database: {MONGODB_DB_NAME}")
 
 # --- Disconnect when the app shuts down ---
 @app.on_event("shutdown")
@@ -128,7 +133,7 @@ async def shutdown_db_client():
     app.mongodb_client.close()
 
 # ==========================================
-# 🟩 CREATE (POST) - Green Block In Docs
+# CREATE (POST) - Green Block In Docs
 # ==========================================
 
 # --- User Signup With Validation ---
@@ -200,7 +205,7 @@ async def create_new_order(user_id: str):
 
 
 # ==========================================
-# 🟦 READ (GET) - Blue Block In Docs
+# READ (GET) - Blue Block In Docs
 # ==========================================
 
 # --- Home Route To Test API Connection ---
@@ -243,7 +248,7 @@ async def get_user_orders(user_id: str):
 
 
 # ==========================================
-# 🟨 UPDATE (PUT) - Yellow Block In Docs
+# UPDATE (PUT) - Yellow Block In Docs
 # ==========================================
 
 # --- Change Password Endpoint With Validation ---
@@ -309,7 +314,7 @@ async def update_order_items(user_id: str, order_id: str, product_id: str, new_q
 
 
 # ==========================================
-# 🟥 DELETE (DELETE) - Red Block In Docs
+# DELETE (DELETE) - Red Block In Docs
 # ==========================================
 
 # --- Delete User Account With Validation (Also Deletes Cart & Orders) ---
