@@ -39,9 +39,10 @@ export const useAuth = () => {
         throw new Error(data.detail || 'Failed to login');
       }
 
-      const userData = { username, token: data.access_token };
+      const userData = { username };
       setCurrentUser(userData);
       localStorage.setItem('ecommerce_user', JSON.stringify(userData));
+      localStorage.setItem('access_token', data.access_token);
       return { success: true };
 
     } catch (err) {
@@ -83,10 +84,11 @@ export const useAuth = () => {
   };
   
   // --- Logout Function ---
-  const logout = () => {
+const logout = () => {
     setCurrentUser(null);
     localStorage.removeItem('ecommerce_user');
-  };
+    localStorage.removeItem('access_token');
+};
 
   // --- Return Object ---
   return { 
