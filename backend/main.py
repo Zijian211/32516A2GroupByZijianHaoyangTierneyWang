@@ -166,7 +166,12 @@ async def login(credentials: UserLogin):
         JWT_SECRET,
         algorithm=JWT_ALGORITHM
     )
-    return {"message": "Login successful", "access_token": token, "token_type": "bearer"}
+    return {
+        "message": "Login successful",
+        "access_token": token,
+        "token_type": "bearer",
+        "user_id": str(user["_id"]) 
+    }
 
 # --- Add To Cart Endpoint With Validation ---
 @app.post("/cart", status_code=status.HTTP_201_CREATED, tags=["Create (POST)"])

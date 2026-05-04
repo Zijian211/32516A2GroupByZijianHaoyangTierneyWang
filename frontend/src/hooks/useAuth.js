@@ -39,7 +39,7 @@ export const useAuth = () => {
         throw new Error(data.detail || 'Failed to login');
       }
 
-      const userData = { username };
+      const userData = { username, _id: data.user_id };
       setCurrentUser(userData);
       localStorage.setItem('ecommerce_user', JSON.stringify(userData));
       localStorage.setItem('access_token', data.access_token);

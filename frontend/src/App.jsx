@@ -90,7 +90,13 @@ function App() {
 
                 {/* --- Cart + Order Button --- */}
                 <button 
-                  onClick={() => cart.setIsCartOpen(true)}
+                  onClick={() => {
+                  if (!auth.currentUser) {
+                    auth.setShowAuthModal(true);
+                    } else {
+                    cart.setIsCartOpen(true);
+                    }
+                  }}
                   className="relative bg-blue-800 text-white p-2 sm:px-5 sm:py-2.5 rounded-full font-bold hover:bg-blue-600 transition shadow-md flex items-center gap-2"
                   title="View Your Cart, Please Checkout to Place Orders"
                 >
@@ -107,7 +113,13 @@ function App() {
                   )}
                 </button>
                 <button 
-                  onClick={() => orders.setShowOrderModal(true)}
+                  onClick={() => {
+                  if (!auth.currentUser) {
+                    auth.setShowAuthModal(true);
+                   } else {
+                   orders.setShowOrderModal(true);
+                  }
+                  }}
                   className="relative bg-green-800 text-white p-2 sm:px-5 sm:py-2.5 rounded-full font-bold hover:bg-green-600 transition shadow-md flex items-center gap-2"
                   title="View Your All Historical Orders"
                 >
