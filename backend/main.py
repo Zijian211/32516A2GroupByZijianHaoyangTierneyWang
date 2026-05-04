@@ -1,4 +1,5 @@
-from fastapi import FastAPI, status, HTTPException, Query
+from fastapi import FastAPI, status, HTTPException, Query, Depends
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 from dotenv import load_dotenv
@@ -7,14 +8,12 @@ from typing import List, Optional
 from datetime import datetime, timezone, timedelta
 import os
 import re
-from bson import ObjectId # --- Added To Handle MongoDB's Native IDs ---
-from bson.errors import InvalidId # --- To Catch Invalid ObjectId Formats ---
-
+from bson import ObjectId
+from bson.errors import InvalidId
 from passlib.context import CryptContext
 from jose import JWTError, jwt
 
-# --- Pydantic Model For CartItem ---
-# --- 1. Product Model (Digital Goods: Phones, Watches, Laptops) ---
+# --- Pydantic Models ---
 class Product(BaseModel):
     name: str
     price: float
@@ -22,11 +21,11 @@ class Product(BaseModel):
     image: str
     category: str
 
-# --- 2. User Model (Handles Authentication With Strict Validation) ---
 class User(BaseModel):
     username: str
     email: str
     password: str
+    role: str = "user"
 
     @field_validator('username')
     @classmethod
@@ -80,9 +79,8 @@ class PasswordChange(BaseModel):
     new_password: str
     confirm_new_password: str
 
-# --- 3. Cart Item & Cart Model (Tied To A Specific User) ---
 class CartItem(BaseModel):
-    user_id: str # --- It Knows Who Owns The Cart Item ---
+    user_id: str
     product_id: str
     name: str
     price: float
@@ -93,25 +91,73 @@ class UserCart(BaseModel):
     user_id: str
     items: List[CartItem] = []
 
-# --- 4. Order Model (Created When "Checkout" Is Clicked) ---
 class Order(BaseModel):
     user_id: str
     items: List[CartItem]
     total_price: float
-    status: str = "Completed" # --- Instantly Completed For This Order Without Transaction ---
+    status: str = "Completed"
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
-# --- Load The Secret URL From The .env File ---
+# --- Load Env ---
 load_dotenv()
 MONGODB_URL = os.getenv("MONGODB_URL")
 JWT_SECRET = os.getenv("JWT_SECRET")
 JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
+JWT_EXPIRE_MINUTES = 60 * 24
 
+# --- Auth Tools ---
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+bearer_scheme = HTTPBearer()
+
+# --- JWT Helper Functions ---
+def hash_password(plain: str) -> str:
+    return pwd_context.hash(plain)
+
+def verify_password(plain: str, hashed: str) -> bool:
+    return pwd_context.verify(plain, hashed)
+
+def create_token(user_id: str, role: str) -> str:
+    expire = datetime.now(timezone.utc) + timedelta(minutes=JWT_EXPIRE_MINUTES)
+    payload = {"sub": user_id, "role": role, "exp": expire}
+    return jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
+
+# --- Dependency: Any logged-in user ---
+async def get_current_user(
+    credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme)
+):
+    token = credentials.credentials
+    try:
+        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        user_id: str = payload.get("sub")
+        if user_id is None:
+            raise HTTPException(status_code=401, detail="Invalid token")
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Token invalid or expired")
+
+    try:
+        user_obj_id = ObjectId(user_id)
+    except InvalidId:
+        raise HTTPException(status_code=401, detail="Invalid token payload")
+
+    db_user = await app.database.users.find_one({"_id": user_obj_id})
+    if db_user is None:
+        raise HTTPException(status_code=401, detail="User no longer exists")
+
+    return {
+        "user_id": str(db_user["_id"]),
+        "username": db_user["username"],
+        "role": db_user.get("role", "user")
+    }
+
+# --- Dependency: Admin only ---
+async def require_admin(current_user: dict = Depends(get_current_user)):
+    if current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    return current_user
 
 app = FastAPI()
 
-# --- CORS Middleware For React ---
+# --- CORS ---
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -122,71 +168,60 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# --- Connect to Database when the app starts ---
+# --- DB Lifecycle ---
 @app.on_event("startup")
 async def startup_db_client():
     app.mongodb_client = AsyncIOMotorClient(MONGODB_URL)
     app.database = app.mongodb_client.ecommerce_db
     print("Connected to the MongoDB database!")
 
-# --- Disconnect when the app shuts down ---
 @app.on_event("shutdown")
 async def shutdown_db_client():
     app.mongodb_client.close()
 
 # ==========================================
-# 🟩 CREATE (POST) - Green Block In Docs
+# CREATE (POST)
 # ==========================================
 
-# --- User Signup With Validation ---
 @app.post("/auth/signup", status_code=status.HTTP_201_CREATED, tags=["Create (POST)"])
 async def signup(user: User):
     user_collection = app.database.users
     existing_user = await user_collection.find_one({"username": user.username})
     if existing_user:
         raise HTTPException(status_code=400, detail="Username already taken")
-    
     new_user = user.dict()
-    new_user["password"] = pwd_context.hash(user.password) 
+    new_user["password"] = hash_password(user.password)
     await user_collection.insert_one(new_user)
     return {"message": f"User {user.username} created successfully!"}
 
-# --- User Login With Validation ---
 @app.post("/auth/login", tags=["Create (POST)"])
 async def login(credentials: UserLogin):
     user_collection = app.database.users
     user = await user_collection.find_one({"username": credentials.username})
-    
-    if not user or not pwd_context.verify(credentials.password, user["password"]):
+    if not user or not verify_password(credentials.password, user["password"]):
         raise HTTPException(status_code=401, detail="Invalid username or password")
-    
-    expire = datetime.now(timezone.utc) + timedelta(hours=24)
-    token = jwt.encode(
-        {"sub": str(user["_id"]), "exp": expire},
-        JWT_SECRET,
-        algorithm=JWT_ALGORITHM
-    )
+    token = create_token(str(user["_id"]), user.get("role", "user"))
     return {
         "message": "Login successful",
         "access_token": token,
         "token_type": "bearer",
-        "user_id": str(user["_id"]) 
+        "user_id": str(user["_id"]),
+        "username": user["username"],
+        "role": user.get("role", "user")
     }
 
-# --- Add To Cart Endpoint With Validation ---
 @app.post("/cart", status_code=status.HTTP_201_CREATED, tags=["Create (POST)"])
-async def add_to_cart(item: CartItem):
+async def add_to_cart(item: CartItem, current_user: dict = Depends(get_current_user)):
+    if current_user["user_id"] != item.user_id and current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Access denied")
     try:
         official_product = await app.database.products.find_one({"_id": ObjectId(item.product_id)})
     except InvalidId:
         raise HTTPException(status_code=400, detail="Invalid Product ID format")
-    
     if not official_product:
         raise HTTPException(status_code=404, detail="Product not found in store")
-
     cart_collection = app.database.cart
     existing_item = await cart_collection.find_one({"product_id": item.product_id, "user_id": item.user_id})
-    
     if existing_item:
         new_quantity = existing_item["quantity"] + item.quantity
         await cart_collection.update_one(
@@ -194,20 +229,17 @@ async def add_to_cart(item: CartItem):
             {"$set": {"quantity": new_quantity}}
         )
         return {"message": "Cart quantity updated!"}
-    
-    new_cart_entry = item.dict()
-    await cart_collection.insert_one(new_cart_entry)
+    await cart_collection.insert_one(item.dict())
     return {"message": "Successfully added to cart!"}
 
-# --- Create Order Endpoint With Validation ---
 @app.post("/orders", status_code=status.HTTP_201_CREATED, tags=["Create (POST)"])
-async def create_new_order(user_id: str):
+async def create_new_order(user_id: str, current_user: dict = Depends(get_current_user)):
+    if current_user["user_id"] != user_id and current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Access denied")
     cart_items = await app.database.cart.find({"user_id": user_id}).to_list(100)
     if not cart_items:
         raise HTTPException(status_code=400, detail="Cart is empty")
-        
     total_price = sum(item["price"] * item["quantity"] for item in cart_items)
-    
     new_order = {
         "user_id": user_id,
         "items": cart_items,
@@ -219,75 +251,75 @@ async def create_new_order(user_id: str):
     await app.database.cart.delete_many({"user_id": user_id})
     return {"message": "Order created successfully!"}
 
-
 # ==========================================
-# 🟦 READ (GET) - Blue Block In Docs
+# READ (GET)
 # ==========================================
 
-# --- Home Route To Test API Connection ---
 @app.get("/", tags=["Read (GET)"])
 def home():
     return {"message": "API Connection Ready!"}
 
-# --- Get All Products (No Authentication Required) ---
 @app.get("/products", tags=["Read (GET)"])
 async def get_products():
     products = await app.database.products.find().to_list(100)
-    for product in products: product["_id"] = str(product["_id"])
+    for product in products:
+        product["_id"] = str(product["_id"])
     return products
 
-# --- Get All Users (For Admin Purposes, No Passwords Returned) ---
 @app.get("/users", tags=["Read (GET)"])
-async def get_users():
+async def get_users(current_user: dict = Depends(require_admin)):
     users = await app.database.users.find().to_list(1000)
-    for u in users: 
+    for u in users:
         u["_id"] = str(u["_id"])
-        u.pop("password", None) # Security: Hide passwords from JSON return
+        u.pop("password", None)
     return users
 
-# --- Get User's Cart Items ---
 @app.get("/cart/{user_id}", tags=["Read (GET)"])
-async def get_cart(user_id: str):
+async def get_cart(user_id: str, current_user: dict = Depends(get_current_user)):
+    if current_user["user_id"] != user_id and current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Access denied")
     items = await app.database.cart.find({"user_id": user_id}).to_list(100)
-    for item in items: item["_id"] = str(item["_id"])
+    for item in items:
+        item["_id"] = str(item["_id"])
     return items
 
-# --- Get User's Orders ---
 @app.get("/orders/{user_id}", tags=["Read (GET)"])
-async def get_user_orders(user_id: str):
+async def get_user_orders(user_id: str, current_user: dict = Depends(get_current_user)):
+    if current_user["user_id"] != user_id and current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Access denied")
     orders = await app.database.orders.find({"user_id": user_id}).to_list(100)
     for o in orders:
         o["_id"] = str(o["_id"])
         for item in o["items"]:
-            if "_id" in item: item["_id"] = str(item["_id"])
+            if "_id" in item:
+                item["_id"] = str(item["_id"])
     return orders
 
-
 # ==========================================
-# 🟨 UPDATE (PUT) - Yellow Block In Docs
+# UPDATE (PUT)
 # ==========================================
 
-# --- Change Password Endpoint With Validation ---
 @app.put("/users/{user_id}/password", tags=["Update (PUT)"])
-async def change_password(user_id: str, data: PasswordChange):
+async def change_password(user_id: str, data: PasswordChange, current_user: dict = Depends(get_current_user)):
+    if current_user["user_id"] != user_id and current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Access denied")
     if data.new_password != data.confirm_new_password:
         raise HTTPException(status_code=400, detail="New passwords do not match")
-        
     try:
         user_obj_id = ObjectId(user_id)
     except InvalidId:
         raise HTTPException(status_code=400, detail="Invalid User ID")
-
     db_user = await app.database.users.find_one({"_id": user_obj_id})
-    if not db_user or db_user["password"] != data.old_password:
+    if not db_user or not verify_password(data.old_password, db_user["password"]):
         raise HTTPException(status_code=401, detail="Incorrect old password")
-        
-    await app.database.users.update_one({"_id": user_obj_id}, {"$set": {"password": data.new_password}})
+    hashed_new = hash_password(data.new_password)
+    await app.database.users.update_one({"_id": user_obj_id}, {"$set": {"password": hashed_new}})
     return {"message": "Password updated successfully"}
 
-# --- Update Cart Item Quantity With Validation ---
 @app.put("/cart/{user_id}/{product_id}", tags=["Update (PUT)"])
-async def update_cart_quantity(user_id: str, product_id: str, quantity: int = Query(gt=0)):
+async def update_cart_quantity(user_id: str, product_id: str, quantity: int = Query(gt=0), current_user: dict = Depends(get_current_user)):
+    if current_user["user_id"] != user_id and current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Access denied")
     result = await app.database.cart.update_one(
         {"product_id": product_id, "user_id": user_id},
         {"$set": {"quantity": quantity}}
@@ -296,19 +328,17 @@ async def update_cart_quantity(user_id: str, product_id: str, quantity: int = Qu
         raise HTTPException(status_code=404, detail="Product not found in cart")
     return {"message": "Quantity updated successfully"}
 
-# --- Update Order Item Quantity With Validation (Bonus) ---
 @app.put("/orders/{user_id}/{order_id}", tags=["Update (PUT)"])
-async def update_order_items(user_id: str, order_id: str, product_id: str, new_quantity: int = Query(gt=0)):
-    """FIX: Now properly finds a specific product inside an order, updates its quantity, and recalculates total price."""
+async def update_order_items(user_id: str, order_id: str, product_id: str, new_quantity: int = Query(gt=0), current_user: dict = Depends(get_current_user)):
+    if current_user["user_id"] != user_id and current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Access denied")
     try:
         order_obj_id = ObjectId(order_id)
     except InvalidId:
         raise HTTPException(status_code=400, detail="Invalid Order ID")
-
     order = await app.database.orders.find_one({"_id": order_obj_id, "user_id": user_id})
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
-
     item_found = False
     updated_items = []
     for item in order["items"]:
@@ -316,53 +346,72 @@ async def update_order_items(user_id: str, order_id: str, product_id: str, new_q
             item["quantity"] = new_quantity
             item_found = True
         updated_items.append(item)
-
     if not item_found:
         raise HTTPException(status_code=404, detail="Product not found in this order")
-
     new_total_price = sum(item["price"] * item["quantity"] for item in updated_items)
-
     await app.database.orders.update_one(
         {"_id": order_obj_id},
         {"$set": {"items": updated_items, "total_price": new_total_price}}
     )
     return {"message": "Order item quantity updated and total price recalculated"}
 
-
 # ==========================================
-# 🟥 DELETE (DELETE) - Red Block In Docs
+# DELETE
 # ==========================================
 
-# --- Delete User Account With Validation (Also Deletes Cart & Orders) ---
 @app.delete("/users/{user_id}", tags=["Delete (DELETE)"])
-async def delete_account(user_id: str):
+async def delete_account(user_id: str, current_user: dict = Depends(get_current_user)):
+    if current_user["user_id"] != user_id and current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Access denied")
     try:
         user_obj_id = ObjectId(user_id)
     except InvalidId:
         raise HTTPException(status_code=400, detail="Invalid User ID")
-
     await app.database.users.delete_one({"_id": user_obj_id})
     await app.database.cart.delete_many({"user_id": user_id})
     await app.database.orders.delete_many({"user_id": user_id})
     return {"message": "Account permanently deleted"}
 
-# --- Delete Item From Cart With Validation ---
 @app.delete("/cart/{user_id}/{product_id}", tags=["Delete (DELETE)"])
-async def delete_from_cart(user_id: str, product_id: str):
+async def delete_from_cart(user_id: str, product_id: str, current_user: dict = Depends(get_current_user)):
+    if current_user["user_id"] != user_id and current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Access denied")
     result = await app.database.cart.delete_one({"product_id": product_id, "user_id": user_id})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Item not found in cart")
     return {"message": "Item removed from cart"}
 
-# --- Delete Entire Order With Validation ---
 @app.delete("/orders/{user_id}/{order_id}", tags=["Delete (DELETE)"])
-async def delete_order(user_id: str, order_id: str):
+async def delete_order(user_id: str, order_id: str, current_user: dict = Depends(get_current_user)):
+    if current_user["user_id"] != user_id and current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Access denied")
     try:
         order_obj_id = ObjectId(order_id)
     except InvalidId:
         raise HTTPException(status_code=400, detail="Invalid Order ID")
-
     result = await app.database.orders.delete_one({"_id": order_obj_id, "user_id": user_id})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Order not found")
     return {"message": "Order deleted successfully"}
+
+# ==========================================
+# ADMIN
+# ==========================================
+
+@app.get("/admin/carts", tags=["Admin"])
+async def admin_get_all_carts(current_user: dict = Depends(require_admin)):
+    all_items = await app.database.cart.find().to_list(1000)
+    for item in all_items:
+        item["_id"] = str(item["_id"])
+
+    carts_by_user = {}
+    for item in all_items:
+        uid = item["user_id"]
+        if uid not in carts_by_user:
+            carts_by_user[uid] = []
+        carts_by_user[uid].append(item)
+
+    return {
+        "total_users_with_items": len(carts_by_user),
+        "carts": carts_by_user
+    }
