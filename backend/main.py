@@ -191,6 +191,7 @@ async def signup(user: User):
         raise HTTPException(status_code=400, detail="Username already taken")
     new_user = user.dict()
     new_user["password"] = hash_password(user.password)
+    new_user["role"] = "user"  
     await user_collection.insert_one(new_user)
     return {"message": f"User {user.username} created successfully!"}
 
