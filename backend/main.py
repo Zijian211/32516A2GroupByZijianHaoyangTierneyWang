@@ -124,7 +124,7 @@ app.add_middleware(
 @app.on_event("startup")
 async def startup_db_client():
     app.mongodb_client = AsyncIOMotorClient(MONGODB_URL)
-    app.database = app.mongodb_client.ecommerce_db
+    app.database = app.mongodb_client[MONGODB_DB_NAME]
     print(f"Connected to MongoDB database: {MONGODB_DB_NAME}")
 
 # --- Disconnect when the app shuts down ---
