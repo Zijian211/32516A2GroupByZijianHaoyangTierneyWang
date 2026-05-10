@@ -101,6 +101,7 @@ class Order(BaseModel):
 # --- Load Env ---
 load_dotenv()
 MONGODB_URL = os.getenv("MONGODB_URL")
+MONGODB_DB_NAME = os.getenv("MONGODB_DB_NAME", "final_ecommerce_db")
 JWT_SECRET = os.getenv("JWT_SECRET")
 JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
 JWT_EXPIRE_MINUTES = 60 * 24
@@ -172,7 +173,7 @@ app.add_middleware(
 @app.on_event("startup")
 async def startup_db_client():
     app.mongodb_client = AsyncIOMotorClient(MONGODB_URL)
-    app.database = app.mongodb_client.ecommerce_db
+    app.database = app.mongodb_client[MONGODB_DB_NAME]
     print("Connected to the MongoDB database!")
 
 @app.on_event("shutdown")

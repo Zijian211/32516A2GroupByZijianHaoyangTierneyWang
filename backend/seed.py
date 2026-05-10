@@ -12,10 +12,11 @@ env_path = BASE_DIR / ".env"
 load_dotenv(dotenv_path=env_path)
 
 MONGODB_URL = os.getenv("MONGODB_URL")
+MONGODB_DB_NAME = os.getenv("MONGODB_DB_NAME", "final_ecommerce_db")
 
 async def seed_database():
     client = AsyncIOMotorClient(MONGODB_URL)
-    db = client.ecommerce_db
+    db = client[MONGODB_DB_NAME]
     
     await db.products.delete_many({}) # --- Clear Old Data ---
     
