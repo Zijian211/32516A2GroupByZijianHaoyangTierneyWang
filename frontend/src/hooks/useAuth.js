@@ -39,9 +39,14 @@ export const useAuth = () => {
         throw new Error(data.detail || 'Failed to login');
       }
 
-      const userData = { username, _id: data.user_id };
+      const userData = {
+      _id: data.user_id,
+      username: data.username || username,
+      role: data.role || "user"};
       setCurrentUser(userData);
       localStorage.setItem('ecommerce_user', JSON.stringify(userData));
+      localStorage.setItem('ecommerce_token', data.access_token);
+      localStorage.setItem('ecommerce_token_type', data.token_type || 'bearer');
       return { success: true };
 
     } catch (err) {
@@ -83,10 +88,12 @@ export const useAuth = () => {
   };
   
   // --- Logout Function ---
-  const logout = () => {
-    setCurrentUser(null);
-    localStorage.removeItem('ecommerce_user');
-  };
+const logout = () => {
+  setCurrentUser(null);
+  localStorage.removeItem('ecommerce_user');
+  localStorage.removeItem('ecommerce_token');
+  localStorage.removeItem('ecommerce_token_type');
+};
 
   // --- Return Object ---
   return { 

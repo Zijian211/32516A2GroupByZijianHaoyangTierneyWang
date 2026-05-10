@@ -12,7 +12,7 @@ env_path = BASE_DIR / ".env"
 load_dotenv(dotenv_path=env_path)
 
 MONGODB_URL = os.getenv("MONGODB_URL")
-MONGODB_DB_NAME = os.getenv("MONGODB_DB_NAME", "finalecommerce_db")
+MONGODB_DB_NAME = os.getenv("MONGODB_DB_NAME", "final_ecommerce_db")
 
 async def seed_database():
     client = AsyncIOMotorClient(MONGODB_URL)
@@ -44,7 +44,7 @@ async def seed_database():
     ]
     
     await db.products.insert_many(products)
-    print(f"Successfully seeded {len(products)} products into database: {MONGODB_DB_NAME}.")
+    print(f"Successfully seeded {len(products)} products.")
 
 if __name__ == "__main__":
     asyncio.run(seed_database())
