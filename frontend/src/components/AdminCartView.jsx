@@ -1,76 +1,66 @@
 import { useEffect, useState } from "react";
-import {
-  fetchAllUsersApi,
-  getCartApi,
-  fetchOrdersApi
-} from "../services/api";
-
-const [users, setUsers] = useState([]);
-const [selectedUserId, setSelectedUserId] = useState(null);
-const [selectedCart, setSelectedCart] = useState([]);
-const [selectedOrders, setSelectedOrders] = useState([]);
-const [loading, setLoading] = useState(true);
-const [detailLoading, setDetailLoading] = useState(false);
-const [error, setError] = useState("");
-
-
-useEffect(() => {
-  const loadUsers = async () => {
-    try {
-      setLoading(true);
-      setError("");
-
-      const data = await fetchAllUsersApi();
-      setUsers(data);
-
-      if (data.length > 0) {
-        setSelectedUserId(data[0]._id);
-      }
-    } catch (err) {
-      setError(err.message || "Failed to load users.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  loadUsers();
-}, []);
-
-useEffect(() => {
-  if (!selectedUserId) return;
-
-  const loadSelectedUserData = async () => {
-    try {
-      setDetailLoading(true);
-      setError("");
-
-      const cartData = await getCartApi(selectedUserId);
-      const orderData = await fetchOrdersApi(selectedUserId);
-
-      setSelectedCart(cartData);
-      setSelectedOrders(orderData);
-    } catch (err) {
-      setError(err.message || "Failed to load user cart and orders.");
-    } finally {
-      setDetailLoading(false);
-    }
-  };
-
-  loadSelectedUserData();
-}, [selectedUserId]);
+import { fetchAdminCartsApi } from "../services/api";
 
 function formatCurrency(amount) {
-  return `$${Number(amount).toLocaleString("en-AU", {
+  return `$${Number(amount || 0).toLocaleString("en-AU", {
     minimumFractionDigits: 2,
-    maximumFractionDigits: 2
+    maximumFractionDigits: 2,
   })}`;
+}
+
+function formatDate(value) {
+  if (!value) return "N/A";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "N/A";
+  return date.toLocaleDateString("en-AU");
 }
 
 function AdminCartView({ currentUser }) {
   const [users, setUsers] = useState([]);
   const [selectedUserId, setSelectedUserId] = useState(null);
+  const [summary, setSummary] = useState({
+    total_users: 0,
+    total_cart_items: 0,
+    total_cart_value: 0,
+    total_order_value: 0,
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    const loadAdminData = async () => {
+      if (currentUser?.role !== "admin") {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        setError("");
+
+        const data = await fetchAdminCartsApi();
+
+        const loadedUsers = data.users || [];
+        setUsers(loadedUsers);
+        setSummary({
+          total_users: data.total_users || loadedUsers.length,
+          total_cart_items: data.total_cart_items || 0,
+          total_cart_value: data.total_cart_value || 0,
+          total_order_value: data.total_order_value || 0,
+        });
+
+        if (loadedUsers.length > 0) {
+          setSelectedUserId(loadedUsers[0].user_id);
+        }
+      } catch (err) {
+        setError(err.message || "Failed to load admin data.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadAdminData();
+  }, [currentUser]);
 
   if (currentUser?.role !== "admin") {
     return (
@@ -81,42 +71,6 @@ function AdminCartView({ currentUser }) {
       </div>
     );
   }
-
-  useEffect(() => {
-    const loadMockData = async () => {
-      try {
-        setLoading(true);
-        setError("");
-
-        await new Promise((resolve) => setTimeout(resolve, 500));
-
-        setUsers(mockUsers);
-        setSelectedUserId(mockUsers[0]?.user_id || null);
-      } catch (err) {
-        setError("Failed to load admin user data. Please try again.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadMockData();
-  }, []);
-
-  const selectedUser = users.find((user) => user.user_id === selectedUserId);
-
-  const totalUsers = users.length;
-
-  const totalCartItems = users.reduce((sum, user) => {
-    return sum + user.cart.reduce((cartSum, item) => cartSum + item.quantity, 0);
-  }, 0);
-
-  const totalOrderValue = users.reduce((sum, user) => {
-    return sum + user.orders.reduce((orderSum, order) => orderSum + order.total, 0);
-  }, 0);
-
-  const selectedCartTotal = selectedUser
-    ? selectedUser.cart.reduce((sum, item) => sum + item.price * item.quantity, 0)
-    : 0;
 
   if (loading) {
     return (
@@ -143,6 +97,13 @@ function AdminCartView({ currentUser }) {
     );
   }
 
+  const selectedUser = users.find((user) => user.user_id === selectedUserId);
+
+  const selectedCartItems = selectedUser?.cart?.items || [];
+  const selectedOrders = selectedUser?.orders || [];
+
+  const selectedCartTotal = selectedUser?.cart?.total_value || 0;
+
   return (
     <section>
       <div className="mb-8">
@@ -160,48 +121,58 @@ function AdminCartView({ currentUser }) {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <p className="text-sm text-gray-500 mb-1">Total Users</p>
-          <p className="text-3xl font-extrabold text-gray-900">{totalUsers}</p>
+          <p className="text-3xl font-extrabold text-gray-900">
+            {summary.total_users}
+          </p>
         </div>
 
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <p className="text-sm text-gray-500 mb-1">Total Cart Items</p>
-          <p className="text-3xl font-extrabold text-blue-800">{totalCartItems}</p>
+          <p className="text-3xl font-extrabold text-blue-800">
+            {summary.total_cart_items}
+          </p>
         </div>
 
         <div className="bg-gradient-to-r from-orange-500 to-red-600 rounded-2xl shadow-sm p-6 text-white">
           <p className="text-sm opacity-90 mb-1">Total Order Value</p>
-          <p className="text-3xl font-extrabold">{formatCurrency(totalOrderValue)}</p>
+          <p className="text-3xl font-extrabold">
+            {formatCurrency(summary.total_order_value)}
+          </p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         <aside className="lg:col-span-1 bg-white rounded-2xl shadow-sm border border-gray-100 p-5 h-fit">
-          <h2 className="text-lg font-extrabold text-gray-900 mb-4">
-            Users
-          </h2>
+          <h2 className="text-lg font-extrabold text-gray-900 mb-4">Users</h2>
 
-          <div className="space-y-3">
-            {users.map((user) => {
-              const isSelected = user.user_id === selectedUserId;
+          {users.length === 0 ? (
+            <p className="text-sm text-gray-500">No regular users found.</p>
+          ) : (
+            <div className="space-y-3">
+              {users.map((user) => {
+                const isSelected = user.user_id === selectedUserId;
 
-              return (
-                <button
-                  key={user.user_id}
-                  onClick={() => setSelectedUserId(user.user_id)}
-                  className={`w-full text-left rounded-xl border p-4 transition ${
-                    isSelected
-                      ? "border-orange-500 bg-orange-50 shadow-sm"
-                      : "border-gray-100 bg-white hover:bg-gray-50"
-                  }`}
-                >
-                  <p className="text-sm text-gray-500">User ID</p>
-                  <p className="font-extrabold text-gray-900">{user.user_id}</p>
-                  <p className="text-sm text-gray-600 mt-1">{user.username}</p>
-                  <p className="text-xs text-gray-400 truncate">{user.email}</p>
-                </button>
-              );
-            })}
-          </div>
+                return (
+                  <button
+                    key={user.user_id}
+                    onClick={() => setSelectedUserId(user.user_id)}
+                    className={`w-full text-left rounded-xl border p-4 transition ${
+                      isSelected
+                        ? "border-orange-500 bg-orange-50 shadow-sm"
+                        : "border-gray-100 bg-white hover:bg-gray-50"
+                    }`}
+                  >
+                    <p className="text-sm text-gray-500">User ID</p>
+                    <p className="font-extrabold text-gray-900 break-all">
+                      {user.user_id}
+                    </p>
+                    <p className="text-sm text-gray-600 mt-1">{user.username}</p>
+                    <p className="text-xs text-gray-400 truncate">{user.email}</p>
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </aside>
 
         <div className="lg:col-span-3 space-y-6">
@@ -222,14 +193,18 @@ function AdminCartView({ currentUser }) {
                   <div>
                     <p className="text-sm text-gray-500">Selected User</p>
                     <h2 className="text-2xl font-extrabold text-gray-900">
-                      User ID: {selectedUser.user_id}
+                      {selectedUser.username}
                     </h2>
-                    <p className="text-gray-600">{selectedUser.username}</p>
+                    <p className="text-gray-600 break-all">
+                      User ID: {selectedUser.user_id}
+                    </p>
                     <p className="text-sm text-gray-400">{selectedUser.email}</p>
                   </div>
 
                   <div className="bg-orange-50 border border-orange-100 px-5 py-4 rounded-xl">
-                    <p className="text-xs text-gray-500 font-medium">Current Cart Total</p>
+                    <p className="text-xs text-gray-500 font-medium">
+                      Current Cart Total
+                    </p>
                     <p className="text-2xl font-extrabold text-orange-600">
                       {formatCurrency(selectedCartTotal)}
                     </p>
@@ -247,10 +222,12 @@ function AdminCartView({ currentUser }) {
                   </p>
                 </div>
 
-                {selectedUser.cart.length === 0 ? (
+                {selectedCartItems.length === 0 ? (
                   <div className="p-10 text-center text-gray-500">
                     <div className="text-5xl mb-4">🧺</div>
-                    <p className="font-medium">This user has no items in their cart.</p>
+                    <p className="font-medium">
+                      This user has no items in their cart.
+                    </p>
                   </div>
                 ) : (
                   <div className="overflow-x-auto">
@@ -265,9 +242,9 @@ function AdminCartView({ currentUser }) {
                       </thead>
 
                       <tbody>
-                        {selectedUser.cart.map((item, index) => (
+                        {selectedCartItems.map((item, index) => (
                           <tr
-                            key={`${item.name}-${index}`}
+                            key={`${item.product_id || item.name}-${index}`}
                             className="border-b border-gray-100 last:border-b-0 hover:bg-orange-50 transition"
                           >
                             <td className="px-6 py-4 font-semibold text-gray-900">
@@ -282,7 +259,7 @@ function AdminCartView({ currentUser }) {
                               {formatCurrency(item.price)}
                             </td>
                             <td className="px-6 py-4 font-bold text-gray-900">
-                              {formatCurrency(item.price * item.quantity)}
+                              {formatCurrency(item.subtotal || item.price * item.quantity)}
                             </td>
                           </tr>
                         ))}
@@ -302,10 +279,12 @@ function AdminCartView({ currentUser }) {
                   </p>
                 </div>
 
-                {selectedUser.orders.length === 0 ? (
+                {selectedOrders.length === 0 ? (
                   <div className="p-10 text-center text-gray-500">
                     <div className="text-5xl mb-4">📦</div>
-                    <p className="font-medium">This user has no order history.</p>
+                    <p className="font-medium">
+                      This user has no order history.
+                    </p>
                   </div>
                 ) : (
                   <div className="overflow-x-auto">
@@ -320,24 +299,24 @@ function AdminCartView({ currentUser }) {
                       </thead>
 
                       <tbody>
-                        {selectedUser.orders.map((order) => (
+                        {selectedOrders.map((order) => (
                           <tr
-                            key={order.order_id}
+                            key={order._id}
                             className="border-b border-gray-100 last:border-b-0 hover:bg-green-50 transition"
                           >
                             <td className="px-6 py-4 font-semibold text-gray-900">
-                              {order.order_id}
+                              {order._id}
                             </td>
                             <td className="px-6 py-4 text-gray-700">
-                              {order.date}
+                              {formatDate(order.created_at)}
                             </td>
                             <td className="px-6 py-4">
                               <span className="inline-flex px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-800">
-                                {order.status}
+                                {order.status || "Completed"}
                               </span>
                             </td>
                             <td className="px-6 py-4 font-bold text-gray-900">
-                              {formatCurrency(order.total)}
+                              {formatCurrency(order.total_price)}
                             </td>
                           </tr>
                         ))}

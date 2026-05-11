@@ -34,9 +34,21 @@ function App() {
   const currentUser = auth.currentUser;
   const cart = useCart(currentUser, auth.setShowAuthModal, setToastMessage);
   const orders = useOrders(currentUser);
-  
-  
 
+  // --- Switch View Based On User Role ---
+  useEffect(() => {
+    if (!currentUser) {
+      setCurrentView("products");
+      return;
+    }
+
+    if (currentUser.role === "admin") {
+      setCurrentView("adminCarts");
+    } else {
+      setCurrentView("products");
+    }
+  }, [currentUser]);
+  
   // --- Fetch Products When The Page First Loads ---
   useEffect(() => {
     setIsLoading(true);
@@ -54,7 +66,7 @@ function App() {
     
           {/* --- Brand Section --- */}
           <div 
-            onClick={() => setCurrentView("products")}
+            onClick={() => setCurrentView(currentUser?.role === "admin" ? "adminCarts" : "products")}
             className="flex items-center gap-3 cursor-pointer hover:opacity-90 transition"
           >
             <img 
@@ -97,37 +109,48 @@ function App() {
                 </div> 
 
                 {/* --- Cart + Order Button --- */}
-                <button 
-                  onClick={() => {
-                  if (!auth.currentUser) {
-                    auth.setShowAuthModal(true);
-                    } else {
-                    cart.setIsCartOpen(true);
-                    }
-                  }}
-                  className="relative bg-blue-800 text-white p-2 sm:px-5 sm:py-2.5 rounded-full font-bold hover:bg-blue-600 transition shadow-md flex items-center gap-2"
-                  title="View Your Cart, Please Checkout to Place Orders"
-                >
-                  <span className="hidden sm:inline">Cart</span>
-                  
-                  {/* --- Simple Cart Icon Placeholder --- */}
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                  </svg>
-                  {cart.totalCartItems > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full border-2 border-white">
-                      {cart.totalCartItems}
-                    </span>
-                  )}
-                </button>
-                {currentUser && currentUser.role !== "admin" && (
+                {currentUser?.role === "admin" ? (
                   <button
-                    onClick={() => orders.setShowOrderModal(true)}
-                    className="relative bg-green-800 text-white p-2 sm:px-5 sm:py-2.5 rounded-full font-bold hover:bg-green-600 transition shadow-md flex items-center gap-2"
-                    title="View Your All Historical Orders"
+                    onClick={() => setCurrentView("adminCarts")}
+                    className="relative bg-purple-700 text-white p-2 sm:px-5 sm:py-2.5 rounded-full font-bold hover:bg-purple-600 transition shadow-md flex items-center gap-2"
+                    title="View Admin Cart Dashboard"
                   >
-                    Orders
+                    Admin Dashboard
                   </button>
+                ) : (
+                  <>
+                    <button 
+                      onClick={() => {
+                      if (!auth.currentUser) {
+                        auth.setShowAuthModal(true);
+                        } else {
+                        cart.setIsCartOpen(true);
+                        }
+                      }}
+                      className="relative bg-blue-800 text-white p-2 sm:px-5 sm:py-2.5 rounded-full font-bold hover:bg-blue-600 transition shadow-md flex items-center gap-2"
+                      title="View Your Cart, Please Checkout to Place Orders"
+                    >
+                      <span className="hidden sm:inline">Cart</span>
+                      
+                      {/* --- Simple Cart Icon Placeholder --- */}
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                      </svg>
+                      {cart.totalCartItems > 0 && (
+                        <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full border-2 border-white">
+                          {cart.totalCartItems}
+                        </span>
+                      )}
+                    </button>
+
+                    <button
+                      onClick={() => orders.setShowOrderModal(true)}
+                      className="relative bg-green-800 text-white p-2 sm:px-5 sm:py-2.5 rounded-full font-bold hover:bg-green-600 transition shadow-md flex items-center gap-2"
+                      title="View Your All Historical Orders"
+                    >
+                      Orders
+                    </button>
+                  </>
                 )}
                 
                 {/* --- GitHub Link (Hidden On Mobile) --- */}
