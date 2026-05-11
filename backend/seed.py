@@ -1,6 +1,7 @@
 import os
 import asyncio
 from pathlib import Path
+from passlib.context import CryptContext
 from dotenv import load_dotenv
 from motor.motor_asyncio import AsyncIOMotorClient
 
@@ -14,10 +15,34 @@ load_dotenv(dotenv_path=env_path)
 MONGODB_URL = os.getenv("MONGODB_URL")
 MONGODB_DB_NAME = os.getenv("MONGODB_DB_NAME", "final_ecommerce_db")
 
+ADMIN_USERNAME = os.getenv("ADMIN_USERNAME")
+ADMIN_EMAIL = os.getenv("ADMIN_EMAIL")
+ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
+
+# --- Initialise Admin Password Context For Hashing ---
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
 async def seed_database():
     client = AsyncIOMotorClient(MONGODB_URL)
     db = client[MONGODB_DB_NAME]
     
+    if ADMIN_USERNAME and ADMIN_EMAIL and ADMIN_PASSWORD:
+        await db.users.update_one(
+            {"username": ADMIN_USERNAME},
+            {
+                "$set": {
+                    "username": ADMIN_USERNAME,
+                    "email": ADMIN_EMAIL,
+                    "password": pwd_context.hash(ADMIN_PASSWORD),
+                    "role": "admin"
+                }
+            },
+            upsert=True
+        )
+        print(f"Admin user '{ADMIN_USERNAME}' seeded successfully.")
+    else:
+        print("Admin user seed skipped. ADMIN_USERNAME, ADMIN_EMAIL, or ADMIN_PASSWORD is not set.")
+
     await db.products.delete_many({}) # --- Clear Old Data ---
     
     products = [

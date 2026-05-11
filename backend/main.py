@@ -174,7 +174,7 @@ app.add_middleware(
 async def startup_db_client():
     app.mongodb_client = AsyncIOMotorClient(MONGODB_URL)
     app.database = app.mongodb_client[MONGODB_DB_NAME]
-    print("Connected to the MongoDB database!")
+    print(f"Connected to MongoDB database: {MONGODB_DB_NAME}")
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
@@ -402,18 +402,72 @@ async def delete_order(user_id: str, order_id: str, current_user: dict = Depends
 
 @app.get("/admin/carts", tags=["Admin"])
 async def admin_get_all_carts(current_user: dict = Depends(require_admin)):
-    all_items = await app.database.cart.find().to_list(1000)
-    for item in all_items:
-        item["_id"] = str(item["_id"])
+    users = await app.database.users.find({"role": "user"}).to_list(1000)
 
-    carts_by_user = {}
-    for item in all_items:
-        uid = item["user_id"]
-        if uid not in carts_by_user:
-            carts_by_user[uid] = []
-        carts_by_user[uid].append(item)
+    result_users = []
+    total_cart_items = 0
+    total_cart_value = 0
+    total_order_value = 0
+
+    for user in users:
+        user_id = str(user["_id"])
+
+        cart_items = await app.database.cart.find({"user_id": user_id}).to_list(100)
+        orders = await app.database.orders.find({"user_id": user_id}).to_list(100)
+
+        formatted_cart_items = []
+        user_cart_total = 0
+        user_cart_quantity = 0
+
+        for item in cart_items:
+            item["_id"] = str(item["_id"])
+            item_quantity = item.get("quantity", 0)
+            item_price = item.get("price", 0)
+            item_subtotal = item_price * item_quantity
+
+            item["subtotal"] = item_subtotal
+
+            formatted_cart_items.append(item)
+            user_cart_total += item_subtotal
+            user_cart_quantity += item_quantity
+
+        formatted_orders = []
+        user_order_total = 0
+
+        for order in orders:
+            order["_id"] = str(order["_id"])
+
+            if "created_at" in order and hasattr(order["created_at"], "isoformat"):
+                order["created_at"] = order["created_at"].isoformat()
+
+            for item in order.get("items", []):
+                if "_id" in item:
+                    item["_id"] = str(item["_id"])
+
+            user_order_total += order.get("total_price", 0)
+            formatted_orders.append(order)
+
+        total_cart_items += user_cart_quantity
+        total_cart_value += user_cart_total
+        total_order_value += user_order_total
+
+        result_users.append({
+            "user_id": user_id,
+            "username": user.get("username"),
+            "email": user.get("email"),
+            "cart": {
+                "items": formatted_cart_items,
+                "total_items": user_cart_quantity,
+                "total_value": user_cart_total
+            },
+            "orders": formatted_orders,
+            "order_total_value": user_order_total
+        })
 
     return {
-        "total_users_with_items": len(carts_by_user),
-        "carts": carts_by_user
+        "total_users": len(result_users),
+        "total_cart_items": total_cart_items,
+        "total_cart_value": total_cart_value,
+        "total_order_value": total_order_value,
+        "users": result_users
     }
