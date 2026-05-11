@@ -157,6 +157,7 @@ This allows A2 development, JWT testing, admin accounts, cart testing, and order
 * View user order-related information
 * Inspect cart quantities, subtotals, and totals
 * Access admin-only APIs protected by JWT and role checking
+* All other Users' features inside FastAPI
 
 ### Security Features
 * Passwords are stored as hashes, not plain text
@@ -325,7 +326,7 @@ Run the React development server:
 | `POST` | `/auth/signup` | Register new user |
 | `POST` | `/auth/login` | Login and receive JWT token |
 
-### User-Protected Routes
+### User-Protected Routes (Can be used by Admins via user_id)
 | Method | Endpoint | Description |
 |---|---|---|
 | `POST` | `/cart` | Add item to cart |
@@ -337,7 +338,7 @@ Run the React development server:
 | `PUT` | `/users/{user_id}/password` | Change password |
 | `DELETE` | `/users/{user_id}` | Delete account |
 
-### Admin-Protected Routes
+### Admin-Protected Routes (Accessed only by Admins)
 | Method | Endpoint | Description |
 |---|---|---|
 | `GET` | `/users` | Admin-only user list |
@@ -396,7 +397,7 @@ The following workflows were tested:
 - [x] View user cart information
 - [x] View user order-related information
 - [x] Confirm admin dashboard is rendered inside the React SPA
-- [x] Confirm admin route requires JWT and admin role
+- [x] Confirm admin unique route requires JWT and admin role (FastAPI and Authorization)
 
 ---
 
