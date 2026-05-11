@@ -92,14 +92,22 @@ function App() {
               <div className="flex items-center gap-4">         
                 {/* --- User Information + Log Out --- */}
                 <div className="hidden md:flex items-center gap-4 text-sm border-r border-gray-200 pr-4">
-                  <button 
-                    onClick={() => auth.setShowAccountSettings(true)}
-                    className="font-medium text-gray-600 hover:text-orange-600 transition"
-                    title="Click to Manage Your Account Settings"
-                  >
-                    Hi, {currentUser.username}
-                    
-                  </button>
+                  {currentUser?.role === "admin" ? (
+                    <span
+                      className="font-medium text-gray-600"
+                      title="Admin account"
+                    >
+                      Hi, {currentUser.username}
+                    </span>
+                  ) : (
+                    <button 
+                      onClick={() => auth.setShowAccountSettings(true)}
+                      className="font-medium text-gray-600 hover:text-orange-600 transition"
+                      title="Click to Manage Your Account Settings"
+                    >
+                      Hi, {currentUser.username}
+                    </button>
+                  )}
                   <button 
                     onClick={auth.logout}
                     className="text-xs font-bold text-gray-400 hover:text-red-500 transition uppercase tracking-wider"
@@ -110,13 +118,11 @@ function App() {
 
                 {/* --- Cart + Order Button --- */}
                 {currentUser?.role === "admin" ? (
-                  <button
-                    onClick={() => setCurrentView("adminCarts")}
+                  <div
                     className="relative bg-purple-700 text-white p-2 sm:px-5 sm:py-2.5 rounded-full font-bold hover:bg-purple-600 transition shadow-md flex items-center gap-2"
-                    title="View Admin Cart Dashboard"
                   >
                     Admin Dashboard
-                  </button>
+                  </div>
                 ) : (
                   <>
                     <button 
