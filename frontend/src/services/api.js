@@ -75,3 +75,16 @@ export const fetchOrdersApi = async (userId) => {
   if (!response.ok) throw new Error("Failed to fetch orders");
   return response.json();
 };
+
+
+
+// --- Admin Services ---
+export const fetchAllUsersApi = async () => {
+  const response = await fetch(`${API_URL}/users`);
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch users");
+  }
+
+  return response.json();
+};

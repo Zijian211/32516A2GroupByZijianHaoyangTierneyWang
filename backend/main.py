@@ -25,6 +25,7 @@ class User(BaseModel):
     username: str
     email: str
     password: str
+    role: str = "customer"
 
     @field_validator('username')
     @classmethod
@@ -155,7 +156,13 @@ async def login(credentials: UserLogin):
     user = await user_collection.find_one({"username": credentials.username, "password": credentials.password})
     if not user:
         raise HTTPException(status_code=401, detail="Invalid username or password")
-    return {"message": "Login successful", "user_id": str(user["_id"])}
+    return {
+    "message": "Login successful",
+    "user_id": str(user["_id"]),
+    "role": user.get("role", "customer"),
+    "username": user["username"],
+    "email": user["email"]
+}
 
 # --- Add To Cart Endpoint With Validation ---
 @app.post("/cart", status_code=status.HTTP_201_CREATED, tags=["Create (POST)"])

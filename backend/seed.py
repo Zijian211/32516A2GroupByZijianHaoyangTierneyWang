@@ -17,6 +17,36 @@ MONGODB_DB_NAME = os.getenv("MONGODB_DB_NAME", "finalecommerce_db")
 async def seed_database():
     client = AsyncIOMotorClient(MONGODB_URL)
     db = client[MONGODB_DB_NAME]
+
+    admin_users = [
+        {
+            "username": "Haoyang",
+            "email": "haoyang.xue@student.uts.edu.au",
+            "password": "Haoyang123!",
+            "role": "admin"
+        },
+        {
+            "username": "Zijian",
+            "email": "Zijian.hua@student.uts.edu.au",
+            "password": "Zijian123!",
+            "role": "admin"
+        },
+        {
+            "username": "Tierney",
+            "email": "tierney.wang@student.uts.edu.au",
+            "password": "Tierney123!",
+            "role": "admin"
+        }
+    ]
+
+    for admin in admin_users:
+        await db.users.update_one(
+            {"username": admin["username"]},
+            {"$set": admin},
+            upsert=True
+        )
+
+    print("Successfully seeded 3 admin users.")
     
     await db.products.delete_many({}) # --- Clear Old Data ---
     
