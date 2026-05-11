@@ -95,11 +95,29 @@ export const fetchOrdersApi = async (userId) => {
   return response.json();
 };
 
+
 // --- Admin Services ---
+export const fetchAllUsersApi = async () => {
+  const response = await fetch(`${API_URL}/users`, {
+    headers: authHeaders(),
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch users");
+  }
+
+  return response.json();
+};
+
 export const fetchAdminCartsApi = async () => {
   const response = await fetch(`${API_URL}/admin/carts`, {
-    headers: authHeaders()
+    headers: authHeaders(),
   });
-  if (!response.ok) throw new Error("Failed to fetch admin carts");
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch admin carts");
+  }
+
   return response.json();
+};
 };
