@@ -163,7 +163,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:5173",
-        "https://32516-a2-group-by-zijian-haoyang-ti.vercel.app/"
+        "https://32516-a2-group-by-zijian-haoyang-ti.vercel.app"
     ],
     allow_methods=["*"],
     allow_headers=["*"],
