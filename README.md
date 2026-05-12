@@ -310,8 +310,8 @@ Run the React development server:
 
 ## Deployment Links
 
-* **Live Website:**  [(TODO: Add A2 Vercel frontend link)] https://32516-a2-group-by-zijian-haoyang-ti.vercel.app/
-* **Backend API:**  [(TODO: Add A2 Render backend link, add ../docs for FastAPI)] https://three2516-a2-ecommerce-backend.onrender.com/docs
+* **Live Website:**  (A2 Vercel frontend link) https://32516-a2-group-by-zijian-haoyang-ti.vercel.app/
+* **Backend API:**  (A2 Render backend link, add ../docs for FastAPI) https://three2516-a2-ecommerce-backend.onrender.com/docs
 * **GitHub Repository:** https://github.com/Zijian211/32516A2GroupByZijianHaoyangTierneyWang
 
 ---
