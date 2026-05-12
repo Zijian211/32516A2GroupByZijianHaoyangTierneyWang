@@ -122,7 +122,7 @@ To protect the original A1 data, the A2 project uses a separate MongoDB database
 | Project | Database |
 |---|---|
 | A1 Original Project | `ecommerce_db` |
-| A2 Group Extension | `finalecommerce_db` or A2 test database such as `final_ecommerce_db` |
+| A2 Group Extension | `final_ecommerce_db` or A2 test database such as `finalecommerce_db` |
 
 The backend reads the database name from the environment variable:
 
