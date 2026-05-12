@@ -13,11 +13,11 @@ The final system behaves as a single-page application. The React frontend dynami
 
 ## Group Members
 
-| Member | Main Role | Key Responsibility |
+| Member | Student ID | Main Role | Key Responsibility |
 |---|---|---|
-| **Zijian Hua** | Project Lead / Infrastructure & Integration Lead | A1-to-A2 project migration, database separation, integration testing, deployment configuration, database export, README and final documentation |
-| **Haoyang** | Security / JWT Authentication Lead | Password hashing, JWT token generation, protected routes, role-based access control, frontend token storage and Authorization header integration |
-| **Tierney Wang** | Frontend Admin Feature / UI Lead | Admin dashboard, admin cart and order lookup interface, responsive UI, loading/error/empty states, frontend demo support |
+| **Zijian Hua** | 25219890 | Project Lead / Infrastructure & Integration Lead | A1-to-A2 project migration, database separation, integration testing, deployment configuration, database export, README and final documentation |
+| **Haoyang** | 25244500 | Security / JWT Authentication Lead | Password hashing, JWT token generation, protected routes, role-based access control, frontend token storage and Authorization header integration |
+| **Tierney Wang** | 25959786 | Frontend Admin Feature / UI Lead | Admin dashboard, admin cart and order lookup interface, responsive UI, loading/error/empty states, frontend demo support |
 
 ---
 
@@ -126,7 +126,7 @@ To protect the original A1 data, the A2 project uses a separate MongoDB database
 
 The backend reads the database name from the environment variable:
 
-    MONGODB_DB_NAME=finalecommerce_db
+    MONGODB_DB_NAME=final_ecommerce_db
 
 This allows A2 development, JWT testing, admin accounts, cart testing, and order testing to run independently from the original A1 database.
 
@@ -310,8 +310,8 @@ Run the React development server:
 
 ## Deployment Links
 
-* **Live Website:**  (TODO: Add A2 Vercel frontend link)
-* **Backend API:**  (TODO: Add A2 Render backend link)
+* **Live Website:**  [(TODO: Add A2 Vercel frontend link)] https://32516-a2-group-by-zijian-haoyang-ti.vercel.app/
+* **Backend API:**  [(TODO: Add A2 Render backend link, add ../docs for FastAPI)] https://three2516-a2-ecommerce-backend.onrender.com/docs
 * **GitHub Repository:** https://github.com/Zijian211/32516A2GroupByZijianHaoyangTierneyWang
 
 ---
@@ -421,7 +421,7 @@ Zijian led the transition from the original A1 e-commerce platform into the A2 g
 **Files / areas:**
 `backend/main.py`, `backend/seed.py`, `backend/.env.example`, `backend/database_export/`, `README.md`, `CONTRIBUTIONS.md`, `TESTING.md`, deployment configuration
 
-### Haoyang
+### Haoyang Xue
 Haoyang was responsible for the JWT authentication and security upgrade of the system.
 
 **Specific contributions:**
