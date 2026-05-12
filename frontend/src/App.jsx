@@ -23,9 +23,15 @@ function App() {
   const [currentView, setCurrentView] = useState("products");
   
   // --- Search & Filter Logic ---
+  const normalizedCategory = selectedCategory === "All Categories" ? "All" : selectedCategory;
+
   const filteredProducts = products.filter(product => {
-    const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = selectedCategory === "All" || product.category === selectedCategory;
+    const productName = product?.name || "";
+    const productCategory = product?.category || "";
+
+    const matchesSearch = productName.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategory = normalizedCategory === "All" || productCategory === normalizedCategory;
+
     return matchesSearch && matchesCategory;
   });
 
@@ -53,9 +59,13 @@ function App() {
   useEffect(() => {
     setIsLoading(true);
     getProducts()
-      .then(data => setProducts(data))
-      .catch(err => console.error("Error fetching products:", err))
-      .finally(() => setIsLoading(false));
+    .then(data => {
+      const productList = Array.isArray(data) ? data : data.products || [];
+      console.log("Loaded products:", productList.length, productList);
+      setProducts(productList);
+    })
+    .catch(err => console.error("Error fetching products:", err))
+    .finally(() => setIsLoading(false));
   }, []);
 
   return (
