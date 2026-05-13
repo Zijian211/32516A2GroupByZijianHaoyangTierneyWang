@@ -14,7 +14,7 @@ The final system behaves as a single-page application. The React frontend dynami
 ## Group Members
 
 | Member | Student ID | Main Role | Key Responsibility |
-|---|---|---|
+|---|---|---|---|
 | **Zijian Hua** | 25219890 | Project Lead / Infrastructure & Integration Lead | A1-to-A2 project migration, database separation, integration testing, deployment configuration, database export, README and final documentation |
 | **Haoyang** | 25244500 | Security / JWT Authentication Lead | Password hashing, JWT token generation, protected routes, role-based access control, frontend token storage and Authorization header integration |
 | **Tierney Wang** | 25959786 | Frontend Admin Feature / UI Lead | Admin dashboard, admin cart and order lookup interface, responsive UI, loading/error/empty states, frontend demo support |
@@ -234,16 +234,16 @@ The project therefore satisfies the requirement of involving multiple database-b
     │   ├── App.jsx
     │   ├── main.jsx
     │   ├── App.css
-    │   └── index.css
+    |   ├── index.html
+    │   ├── index.css
+    |   ├── package.json
+    |   └── vite.config.js
     │
-    ├── index.html
-    ├── package.json
-    └── vite.config.js
-    │
+    ├── database/
+    │   └── MongoDB JSON export files for products, users, carts, and orders
+    |
     ├── .gitignore
-    ├── README.md
-    ├── CONTRIBUTIONS.md
-    └── TESTING.md
+    └── README.md
 
 ---
 

@@ -1,0 +1,132 @@
+[{
+  "_id": {
+    "$oid": "6a014076de7d4937bc8bb36b"
+  },
+  "user_id": "6a014070de7d4937bc8bb36a",
+  "product_id": "6a013185db126d9e2519e600",
+  "name": "ASUS ROG Zephyrus",
+  "price": 1599.99,
+  "quantity": 1,
+  "image": "https://m.media-amazon.com/images/I/71kq-Q4RvgL._AC_UY218_.jpg"
+},
+{
+  "_id": {
+    "$oid": "6a014076de7d4937bc8bb36c"
+  },
+  "user_id": "6a014070de7d4937bc8bb36a",
+  "product_id": "6a013185db126d9e2519e601",
+  "name": "HP Spectre x360",
+  "price": 1399,
+  "quantity": 1,
+  "image": "https://m.media-amazon.com/images/I/61wdZ89-JWL._AC_UY218_.jpg"
+},
+{
+  "_id": {
+    "$oid": "6a014077de7d4937bc8bb36d"
+  },
+  "user_id": "6a014070de7d4937bc8bb36a",
+  "product_id": "6a013185db126d9e2519e604",
+  "name": "Samsung Galaxy S24 Ultra",
+  "price": 1299,
+  "quantity": 1,
+  "image": "https://m.media-amazon.com/images/I/41emO6FOHvL._AC_UY218_.jpg"
+},
+{
+  "_id": {
+    "$oid": "6a01aefc2b00294420008f86"
+  },
+  "user_id": "6a01ae542b00294420008f7b",
+  "product_id": "6a013185db126d9e2519e600",
+  "name": "ASUS ROG Zephyrus",
+  "price": 1599.99,
+  "quantity": 2,
+  "image": "https://m.media-amazon.com/images/I/71kq-Q4RvgL._AC_UY218_.jpg"
+},
+{
+  "_id": {
+    "$oid": "6a01aefd2b00294420008f87"
+  },
+  "user_id": "6a01ae542b00294420008f7b",
+  "product_id": "6a013185db126d9e2519e601",
+  "name": "HP Spectre x360",
+  "price": 1399,
+  "quantity": 2,
+  "image": "https://m.media-amazon.com/images/I/61wdZ89-JWL._AC_UY218_.jpg"
+},
+{
+  "_id": {
+    "$oid": "6a01aefe2b00294420008f88"
+  },
+  "user_id": "6a01ae542b00294420008f7b",
+  "product_id": "6a013185db126d9e2519e5ff",
+  "name": "Dell XPS 13",
+  "price": 1299,
+  "quantity": 1,
+  "image": "https://m.media-amazon.com/images/I/61a3VUNrd4L._AC_UY218_.jpg"
+},
+{
+  "_id": {
+    "$oid": "6a01b5392b00294420008f8b"
+  },
+  "user_id": "6a001b06dde401e9a9778e88",
+  "product_id": "6a013185db126d9e2519e600",
+  "name": "ASUS ROG Zephyrus",
+  "price": 1599.99,
+  "quantity": 5,
+  "image": "https://m.media-amazon.com/images/I/71kq-Q4RvgL._AC_UY218_.jpg"
+},
+{
+  "_id": {
+    "$oid": "6a027a2ddf2d4ad73f8c6b34"
+  },
+  "user_id": "6a027a19df2d4ad73f8c6b33",
+  "product_id": "6a013185db126d9e2519e608",
+  "name": "Apple Watch Ultra 2",
+  "price": 799,
+  "quantity": 2,
+  "image": "https://m.media-amazon.com/images/I/6165pya85SL._AC_UY218_.jpg"
+},
+{
+  "_id": {
+    "$oid": "6a027a2edf2d4ad73f8c6b35"
+  },
+  "user_id": "6a027a19df2d4ad73f8c6b33",
+  "product_id": "6a013185db126d9e2519e609",
+  "name": "Samsung Galaxy Watch 6",
+  "price": 299,
+  "quantity": 2,
+  "image": "https://m.media-amazon.com/images/I/61NJKdXqx5L._AC_UY218_.jpg"
+},
+{
+  "_id": {
+    "$oid": "6a027a2fdf2d4ad73f8c6b36"
+  },
+  "user_id": "6a027a19df2d4ad73f8c6b33",
+  "product_id": "6a013185db126d9e2519e607",
+  "name": "Sony Xperia 1 V",
+  "price": 1198,
+  "quantity": 1,
+  "image": "https://m.media-amazon.com/images/I/61Wd-aDMBEL._AC_UY218_.jpg"
+},
+{
+  "_id": {
+    "$oid": "6a029175df2d4ad73f8c6b38"
+  },
+  "user_id": "6a029171df2d4ad73f8c6b37",
+  "product_id": "6a013185db126d9e2519e600",
+  "name": "ASUS ROG Zephyrus",
+  "price": 1599.99,
+  "quantity": 3,
+  "image": "https://m.media-amazon.com/images/I/71kq-Q4RvgL._AC_UY218_.jpg"
+},
+{
+  "_id": {
+    "$oid": "6a02917bdf2d4ad73f8c6b39"
+  },
+  "user_id": "6a029171df2d4ad73f8c6b37",
+  "product_id": "6a013185db126d9e2519e601",
+  "name": "HP Spectre x360",
+  "price": 1399,
+  "quantity": 1,
+  "image": "https://m.media-amazon.com/images/I/61wdZ89-JWL._AC_UY218_.jpg"
+}]

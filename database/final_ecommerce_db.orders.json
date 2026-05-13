@@ -1,0 +1,162 @@
+[{
+  "_id": {
+    "$oid": "6a01ae8a2b00294420008f80"
+  },
+  "user_id": "6a001b06dde401e9a9778e88",
+  "items": [
+    {
+      "_id": {
+        "$oid": "6a00246765a7a585c6b7519e"
+      },
+      "user_id": "6a001b06dde401e9a9778e88",
+      "product_id": "69f953f2b60714820895c600",
+      "name": "ASUS ROG Zephyrus",
+      "price": 1599.99,
+      "quantity": 1,
+      "image": "https://m.media-amazon.com/images/I/71kq-Q4RvgL._AC_UY218_.jpg"
+    },
+    {
+      "_id": {
+        "$oid": "6a00246865a7a585c6b7519f"
+      },
+      "user_id": "6a001b06dde401e9a9778e88",
+      "product_id": "69f953f2b60714820895c601",
+      "name": "HP Spectre x360",
+      "price": 1399,
+      "quantity": 2,
+      "image": "https://m.media-amazon.com/images/I/61wdZ89-JWL._AC_UY218_.jpg"
+    }
+  ],
+  "total_price": 4397.99,
+  "status": "Completed",
+  "created_at": {
+    "$date": "2026-05-11T10:25:14.082Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6a01aeb62b00294420008f84"
+  },
+  "user_id": "6a001b06dde401e9a9778e88",
+  "items": [
+    {
+      "_id": {
+        "$oid": "6a01ae912b00294420008f81"
+      },
+      "user_id": "6a001b06dde401e9a9778e88",
+      "product_id": "6a013185db126d9e2519e600",
+      "name": "ASUS ROG Zephyrus",
+      "price": 1599.99,
+      "quantity": 1,
+      "image": "https://m.media-amazon.com/images/I/71kq-Q4RvgL._AC_UY218_.jpg"
+    },
+    {
+      "_id": {
+        "$oid": "6a01ae922b00294420008f82"
+      },
+      "user_id": "6a001b06dde401e9a9778e88",
+      "product_id": "6a013185db126d9e2519e601",
+      "name": "HP Spectre x360",
+      "price": 1399,
+      "quantity": 1,
+      "image": "https://m.media-amazon.com/images/I/61wdZ89-JWL._AC_UY218_.jpg"
+    },
+    {
+      "_id": {
+        "$oid": "6a01ae932b00294420008f83"
+      },
+      "user_id": "6a001b06dde401e9a9778e88",
+      "product_id": "6a013185db126d9e2519e5ff",
+      "name": "Dell XPS 13",
+      "price": 1299,
+      "quantity": 1,
+      "image": "https://m.media-amazon.com/images/I/61a3VUNrd4L._AC_UY218_.jpg"
+    }
+  ],
+  "total_price": 4297.99,
+  "status": "Completed",
+  "created_at": {
+    "$date": "2026-05-11T10:25:58.523Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6a01aef32b00294420008f85"
+  },
+  "user_id": "6a01ae542b00294420008f7b",
+  "items": [
+    {
+      "_id": {
+        "$oid": "6a01ae562b00294420008f7c"
+      },
+      "user_id": "6a01ae542b00294420008f7b",
+      "product_id": "6a013185db126d9e2519e600",
+      "name": "ASUS ROG Zephyrus",
+      "price": 1599.99,
+      "quantity": 2,
+      "image": "https://m.media-amazon.com/images/I/71kq-Q4RvgL._AC_UY218_.jpg"
+    },
+    {
+      "_id": {
+        "$oid": "6a01ae572b00294420008f7d"
+      },
+      "user_id": "6a01ae542b00294420008f7b",
+      "product_id": "6a013185db126d9e2519e601",
+      "name": "HP Spectre x360",
+      "price": 1399,
+      "quantity": 4,
+      "image": "https://m.media-amazon.com/images/I/61wdZ89-JWL._AC_UY218_.jpg"
+    },
+    {
+      "_id": {
+        "$oid": "6a01ae582b00294420008f7e"
+      },
+      "user_id": "6a01ae542b00294420008f7b",
+      "product_id": "6a013185db126d9e2519e5ff",
+      "name": "Dell XPS 13",
+      "price": 1299,
+      "quantity": 3,
+      "image": "https://m.media-amazon.com/images/I/61a3VUNrd4L._AC_UY218_.jpg"
+    },
+    {
+      "_id": {
+        "$oid": "6a01ae5a2b00294420008f7f"
+      },
+      "user_id": "6a01ae542b00294420008f7b",
+      "product_id": "6a013185db126d9e2519e603",
+      "name": "iPhone 15 Pro",
+      "price": 999,
+      "quantity": 2,
+      "image": "https://m.media-amazon.com/images/I/51PtFHUPjBL._AC_UY218_.jpg"
+    }
+  ],
+  "total_price": 14690.98,
+  "status": "Completed",
+  "created_at": {
+    "$date": "2026-05-11T10:26:59.785Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6a01b5372b00294420008f8a"
+  },
+  "user_id": "6a001b06dde401e9a9778e88",
+  "items": [
+    {
+      "_id": {
+        "$oid": "6a01b3da2b00294420008f89"
+      },
+      "user_id": "6a001b06dde401e9a9778e88",
+      "product_id": "6a013185db126d9e2519e600",
+      "name": "ASUS ROG Zephyrus",
+      "price": 1599.99,
+      "quantity": 9,
+      "image": "https://m.media-amazon.com/images/I/71kq-Q4RvgL._AC_UY218_.jpg"
+    }
+  ],
+  "total_price": 14399.91,
+  "status": "Completed",
+  "created_at": {
+    "$date": "2026-05-11T10:53:43.528Z"
+  }
+}]
