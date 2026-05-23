@@ -283,7 +283,7 @@ Seed the database:
 
 Run the FastAPI backend:
 
-    uvicorn main:app --reload
+    uvicorn main:app --reload (also "python -m uvicorn main:app --host 127.0.0.1 --port 8000", if it doesn't work)
 
 * **Backend local URL:** `http://127.0.0.1:8000`
 * **FastAPI Swagger UI:** `http://127.0.0.1:8000/docs`
